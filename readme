@@ -1,0 +1,30 @@
+### FILE STRUCTURE
+
+backend/
+├── controllers/       # Business logic
+│   ├── userController.js
+│   ├── modController.js
+├── routes/            # Routes definitions
+│   ├── userRoutes.js
+│   ├── modRoutes.js
+├── services/          # Service layer for database interactions
+│   ├── userService.js
+│   ├── modService.js
+├── migrations/        # Knex migrations
+├── middlewares/       # Middleware for authentication and error handling
+│   ├── authMiddleware.js
+│   ├── roleMiddleware.js
+├── models/            # Database models (if needed for modularity)
+├── utils/             # Utilities like error handling, token generation
+├── config/            # Configurations (e.g., database, env setup)
+│   ├── knexfile.js
+├── .env               # Environment variables
+├── server.js          # Express app entry point
+└── package.json
+
+
+
+
+
+
+
