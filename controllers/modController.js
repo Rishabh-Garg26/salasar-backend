@@ -423,3 +423,163 @@ exports.updateRolePermissions = async (req, res) => {
     res.status(500).send({ message: "Failed to update roles permissions." });
   }
 };
+
+//
+//Google Sheet info Controller
+//
+
+exports.getGoogleSheet = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      type = "",
+      default_sheet = "false",
+    } = req.query; // Default page = 1 and limit = 10 if not provided
+
+    const offset = (page - 1) * limit; // Calculate the offset for pagination
+
+    const query = db("google_sheet_info")
+      .where("name", "like", `%${search}%`)
+      .orWhere("type", "like", `%${search}%`)
+      .orderBy("id", "asc")
+      .limit(limit)
+      .offset(offset);
+
+    if (type !== "") {
+      query.where("type", "like", `%${type}%`);
+    }
+
+    if (default_sheet === "true") {
+      query.where("type", "like", `%${type}%`).andWhere("default_sheet", true);
+    }
+
+    const googleSheets = await query;
+    // Fetch the total number of brands (with the same search filter)
+    const totalGoogleSheetsQuery = db("google_sheet_info")
+      .count({ count: "*" })
+      .where("name", "like", `%${search}%`)
+      .orWhere("type", "like", `%${search}%`)
+      .first();
+
+    if (type !== "") {
+      totalGoogleSheetsQuery.where("type", "like", `%${type}%`);
+    }
+
+    if (default_sheet === "true") {
+      totalGoogleSheetsQuery
+        .where("type", "like", `%${type}%`)
+        .andWhere("default_sheet", true);
+    }
+
+    const totalGoogleSheets = await totalGoogleSheetsQuery;
+
+    const totalPages = Math.ceil(totalGoogleSheets.count / limit); // Calculate total pages
+
+    // console.log(googleSheets, totalGoogleSheets);
+    return res.status(200).send({ googleSheets, totalPages });
+  } catch (error) {
+    console.error("Error fetching google sheet info needed options:", error);
+    res
+      .status(500)
+      .send({ message: "Failed to fetch google sheet info needed options." });
+  }
+};
+
+exports.addGoogleSheet = async (req, res) => {
+  try {
+    const Check = await db("google_sheet_info")
+      .where({
+        name: req.body.name,
+        type: req.body.type,
+      })
+      .first();
+
+    if (Check) {
+      return res
+        .status(500)
+        .send({ message: "Duplicate google sheet name for the given type" });
+    }
+
+    if (req.body.default_sheet) {
+      await db("google_sheet_info").update({ default_sheet: false }).where({
+        type: req.body.type,
+      });
+    }
+
+    await db("google_sheet_info").insert({
+      name: req.body.name,
+      type: req.body.type,
+      year: req.body.year,
+      sheet_id: req.body.sheet_id,
+      default_sheet: req.body.default_sheet,
+    });
+
+    return res.status(200).send({ message: "Google Sheet added successfully" });
+  } catch (error) {
+    console.error("Error fetching Google Sheet needed options:", error);
+    res
+      .status(500)
+      .send({ message: "Failed to fetch Google Sheet needed options." });
+  }
+};
+
+exports.updateGoogleSheet = async (req, res) => {
+  try {
+    const Check = await db("google_sheet_info")
+      .where({
+        name: req.body.name,
+        type: req.body.type,
+      })
+      .andWhereNot({
+        id: req.body.id,
+      })
+      .first();
+
+    if (Check) {
+      return res.status(500).send({ message: "Duplicate Name for given type" });
+    }
+
+    if (req.body.default_sheet) {
+      await db("google_sheet_info").update({ default_sheet: false }).where({
+        type: req.body.type,
+      });
+    }
+
+    await db("google_sheet_info")
+      .update({
+        name: req.body.name,
+        type: req.body.type,
+        sheet_id: req.body.sheet_id,
+        year: req.body.year,
+        default_sheet: req.body.default_sheet,
+      })
+      .where({ id: req.body.id });
+
+    return res
+      .status(200)
+      .send({ message: "google sheet updated successfully" });
+  } catch (error) {
+    console.error("Error fetching google sheet needed options:", error);
+    res
+      .status(500)
+      .send({ message: "Failed to fetch google sheet needed options." });
+  }
+};
+
+exports.deleteGoogleSheet = async (req, res) => {
+  try {
+    // console.log("Content for deletion", req.body);
+    await db("google_sheet_info")
+      .where({ id: req.body.id, name: req.body.name })
+      .del();
+
+    return res
+      .status(200)
+      .send({ message: "google sheet Deleted successfully" });
+  } catch (error) {
+    console.error("Deleting google sheet error: ", error);
+    res.status(500).send({ message: "Failed to Delete google sheet." });
+  }
+};

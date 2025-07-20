@@ -109,4 +109,34 @@ router.put(
   controller.updateRolePermissions
 );
 
+//Google sheets Routes
+
+router.get(
+  "/google_sheet",
+  authenticateToken,
+  authorizeRole(["can_read_role"]),
+  controller.getGoogleSheet
+);
+
+router.post(
+  "/google_sheet",
+  authenticateToken,
+  authorizeRole(["can_add_role"]),
+  controller.addGoogleSheet
+);
+
+router.put(
+  "/google_sheet",
+  authenticateToken,
+  authorizeRole(["can_update_role"]),
+  controller.updateGoogleSheet
+);
+
+router.delete(
+  "/google_sheet",
+  authenticateToken,
+  authorizeRole(["can_delete_role"]),
+  controller.deleteGoogleSheet
+);
+
 module.exports = router;
