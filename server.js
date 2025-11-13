@@ -19,7 +19,12 @@ app.use(express.urlencoded({ extended: true }));
 require("./routes/userRoutes")(app);
 const modRoutes = require("./routes/modRoutes");
 
+const reportRoutes = require("./routes/reportRoutes");
+
 app.use("/api/mod", modRoutes);
+app.use("/api/report", reportRoutes);
+
+require("./utils/scheduler");
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

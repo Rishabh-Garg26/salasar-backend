@@ -139,4 +139,34 @@ router.delete(
   controller.deleteGoogleSheet
 );
 
+//notification users
+
+router.get(
+  "/notificationusers",
+  authenticateToken,
+  authorizeRole(["can_read_users"]),
+  controller.getNotificationUsers
+);
+
+router.post(
+  "/notificationusers",
+  authenticateToken,
+  authorizeRole(["can_add_users"]),
+  controller.addNotificationusers
+);
+
+router.put(
+  "/notificationusers",
+  authenticateToken,
+  authorizeRole(["can_update_users"]),
+  controller.updatNotificationeUsers
+);
+
+router.delete(
+  "/notificationusers",
+  authenticateToken,
+  authorizeRole(["can_delete_users"]),
+  controller.deleteNotificationUsers
+);
+
 module.exports = router;

@@ -5,15 +5,12 @@
 exports.up = function (knex) {
   return knex.schema.createTable("notifications_permissions", (table) => {
     table.increments("id").primary();
-    table
-      .integer("user_id")
-      .unsigned()
-      .references("id")
-      .inTable("users")
-      .onDelete("CASCADE");
+    table.string("name");
+    table.boolean("emailEnabled").defaultTo(false);
+    table.boolean("phoneEnabled").defaultTo(false);
     table.string("email");
     table.string("phone");
-    table.specificType("graphs", "text[]");
+    table.json("graphs");
     table.string("time");
     table.timestamps(true, true);
   });

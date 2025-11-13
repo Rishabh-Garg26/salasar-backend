@@ -13,6 +13,7 @@ exports.getUsers = async (req, res) => {
     const users = await db("users")
       .join("roles", "roles.id", "users.role_id")
       .select(
+        "users.id",
         "users.active",
         "users.created_at",
         "users.email",
@@ -430,60 +431,58 @@ exports.updateRolePermissions = async (req, res) => {
 
 exports.getGoogleSheet = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      search = "",
-      type = "",
-      default_sheet = "false",
-    } = req.query; // Default page = 1 and limit = 10 if not provided
+    // 1. parse & normalize
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const search = (req.query.search || "").trim();
+    const typeFilter = (req.query.type || "").trim();
+    const defaultSheet = req.query.default_sheet === "true";
+    const offset = (page - 1) * limit;
 
-    const offset = (page - 1) * limit; // Calculate the offset for pagination
+    // 2. build a single base query with grouped ORs for search
+    const baseQuery = db("google_sheet_info").modify((qb) => {
+      if (search) {
+        qb.where(function () {
+          this.where("name", "like", `%${search}%`).orWhere(
+            "type",
+            "like",
+            `%${search}%`
+          );
+        });
+      }
 
-    const query = db("google_sheet_info")
-      .where("name", "like", `%${search}%`)
-      .orWhere("type", "like", `%${search}%`)
+      if (typeFilter) {
+        qb.andWhere("type", "like", `%${typeFilter}%`);
+      }
+
+      if (defaultSheet) {
+        qb.andWhere("default_sheet", true);
+      }
+    });
+
+    // 3a. data query: clone + pagination + ordering
+    const dataQuery = baseQuery
+      .clone()
       .orderBy("id", "asc")
       .limit(limit)
       .offset(offset);
 
-    if (type !== "") {
-      query.where("type", "like", `%${type}%`);
-    }
+    // 3b. count query: clone + count
+    const countQuery = baseQuery.clone().count({ count: "*" }).first();
 
-    if (default_sheet === "true") {
-      query.where("type", "like", `%${type}%`).andWhere("default_sheet", true);
-    }
+    // 4. execute both in parallel
+    const [googleSheets, countResult] = await Promise.all([
+      dataQuery,
+      countQuery,
+    ]);
 
-    const googleSheets = await query;
-    // Fetch the total number of brands (with the same search filter)
-    const totalGoogleSheetsQuery = db("google_sheet_info")
-      .count({ count: "*" })
-      .where("name", "like", `%${search}%`)
-      .orWhere("type", "like", `%${search}%`)
-      .first();
+    const totalRows = parseInt(countResult.count, 10);
+    const totalPages = Math.ceil(totalRows / limit);
 
-    if (type !== "") {
-      totalGoogleSheetsQuery.where("type", "like", `%${type}%`);
-    }
-
-    if (default_sheet === "true") {
-      totalGoogleSheetsQuery
-        .where("type", "like", `%${type}%`)
-        .andWhere("default_sheet", true);
-    }
-
-    const totalGoogleSheets = await totalGoogleSheetsQuery;
-
-    const totalPages = Math.ceil(totalGoogleSheets.count / limit); // Calculate total pages
-
-    // console.log(googleSheets, totalGoogleSheets);
     return res.status(200).send({ googleSheets, totalPages });
   } catch (error) {
-    console.error("Error fetching google sheet info needed options:", error);
-    res
-      .status(500)
-      .send({ message: "Failed to fetch google sheet info needed options." });
+    console.error("Error fetching google sheet info:", error);
+    res.status(500).send({ message: "Failed to fetch google sheet info." });
   }
 };
 
@@ -581,5 +580,114 @@ exports.deleteGoogleSheet = async (req, res) => {
   } catch (error) {
     console.error("Deleting google sheet error: ", error);
     res.status(500).send({ message: "Failed to Delete google sheet." });
+  }
+};
+
+//notifcation users ->
+
+exports.getNotificationUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query; // Default page = 1 and limit = 10 if not provided
+
+    const offset = (page - 1) * limit; // Calculate the offset for pagination
+
+    const NotificationUser = await db("notifications_permissions")
+      .select("*")
+      .where("email", "like", `%${search}%`)
+      .orderBy("id", "asc")
+      .limit(limit)
+      .offset(offset);
+
+    // Fetch the total number of brands (with the same search filter)
+    const totalUsers = await db("notifications_permissions")
+      .count({ count: "*" })
+      .where("email", "like", `%${search}%`)
+      .first();
+
+    const totalPages = Math.ceil(totalUsers.count / limit); // Calculate total pages
+
+    return res.status(200).send({ NotificationUser, totalPages });
+  } catch (error) {
+    console.error(
+      "Error fetching notifications_permissions needed options:",
+      error
+    );
+    res.status(500).send({
+      message: "Failed to fetch notifications_permissions needed options.",
+    });
+  }
+};
+
+exports.addNotificationusers = async (req, res) => {
+  try {
+    // const permissionCheck = await db("notifications_permissions")
+    //   .where({
+    //     user_id: req.body.user_id,
+    //   })
+    //   .first();
+
+    // if (permissionCheck) {
+    //   return res.status(500).send({ message: "Duplicate user" });
+    // }
+
+    await db("notifications_permissions").insert({
+      name: req.body.name,
+      emailEnabled: req.body.emailEnabled,
+      phoneEnabled: req.body.phoneEnabled,
+      email: req.body.email,
+      phone: req.body.phone,
+      graphs: JSON.stringify(req.body.graphNames),
+    });
+
+    return res.status(200).send({ message: "user added successfully" });
+  } catch (error) {
+    console.error(
+      "Error fetching notifications_permissions needed options:",
+      error
+    );
+    res.status(500).send({
+      message: "Failed to fetch notifications_permissions needed options.",
+    });
+  }
+};
+
+exports.updatNotificationeUsers = async (req, res) => {
+  try {
+    await db("notifications_permissions")
+      .update({
+        emailEnabled: req.body.emailEnabled,
+        phoneEnabled: req.body.phoneEnabled,
+        email: req.body.email,
+        phone: req.body.phone,
+        graphs: JSON.stringify(req.body.graph),
+      })
+      .where({ id: req.body.id });
+
+    return res.status(200).send({ message: "Permissions added successfully" });
+  } catch (error) {
+    console.error(
+      "Error fetching notifications_permissions needed options:",
+      error
+    );
+    console.log(error);
+    res.status(500).send({
+      message: "Failed to fetch notifications_permissions needed options.",
+    });
+  }
+};
+
+exports.deleteNotificationUsers = async (req, res) => {
+  try {
+    // console.log("Content for deletion", req.body);
+    await db("notifications_permissions").where({ id: req.body.id }).del();
+
+    return res
+      .status(200)
+      .send({ message: "notifications_permissions Deleted successfully" });
+  } catch (error) {
+    console.error("Deleting notifications_permissions error: ", error);
+    res
+      .status(500)
+      .send({ message: "Failed to Delete notifications_permissions." });
   }
 };

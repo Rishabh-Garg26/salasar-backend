@@ -1,7 +1,9 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD,
@@ -32,4 +34,26 @@ const sendVforgotPasswordEmail = async (email, token) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendVerificationEmail, sendVforgotPasswordEmail };
+const sendReportEmail = async (to, subject, text, attachment) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USERNAME,
+    to,
+    subject,
+    text,
+    attachments: [
+      {
+        filename: "report.png",
+        content: attachment,
+        contentType: "image/png",
+      },
+    ],
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = {
+  sendVerificationEmail,
+  sendVforgotPasswordEmail,
+  sendReportEmail,
+};
