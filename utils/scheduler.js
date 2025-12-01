@@ -47,14 +47,14 @@
 const cron = require("node-cron");
 const axios = require("axios");
 
-let running = false;
+// let running = false;
 
 async function sendDailyReport() {
-  if (running) {
-    console.warn("[sendDailyReport] Previous run still in progress—skipping.");
-    return;
-  }
-  running = true;
+  // if (running) {
+  //   console.warn("[sendDailyReport] Previous run still in progress—skipping.");
+  //   return;
+  // }
+  // running = true;
 
   try {
     const response = await axios.post(
@@ -82,7 +82,7 @@ async function sendDailyReport() {
 }
 
 // 🧪 Run immediately once for testing
-sendDailyReport();
+// sendDailyReport();
 
 // ⏰ Keep daily at 8:00 AM IST
 cron.schedule("0 8 * * *", sendDailyReport, { timezone: "Asia/Kolkata" });
