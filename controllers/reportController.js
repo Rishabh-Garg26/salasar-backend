@@ -19,7 +19,7 @@ const sendReport = async (req, res) => {
     let query = db("notifications_permissions")
       .select(
         "id",
-        "user_id",
+        "name",
         "emailEnabled",
         "phoneEnabled",
         "email",
@@ -63,9 +63,9 @@ const sendReport = async (req, res) => {
     const waSet = new Set(whatsappTargets);
     const uniquePhones = [...waSet];
 
-    // const emailSends = uniqueEmails.map((to) =>
-    //   sendReportEmail(to, subject, text, imageBuffer)
-    // );
+    const emailSends = uniqueEmails.map((to) =>
+      sendReportEmail(to, subject, text, imageBuffer)
+    );
 
     const waTemplate = {
       name: whatsappTemplate?.name || "report_with_image",
@@ -74,34 +74,34 @@ const sendReport = async (req, res) => {
 
     console.log("waTemplate", waTemplate);
 
-    const waSends = uniquePhones.map((msisdn) =>
-      sendWhatsappTemplateWithImage({
-        to: msisdn,
-        templateName: waTemplate.name,
-        languageCode: waTemplate.language,
-        headerImageBuffer: imageBuffer,
-        bodyParams: [text], // adjust according to your template placeholders
-      })
-    );
+    // const waSends = uniquePhones.map((msisdn) =>
+    //   sendWhatsappTemplateWithImage({
+    //     to: msisdn,
+    //     templateName: waTemplate.name,
+    //     languageCode: waTemplate.language,
+    //     headerImageBuffer: imageBuffer,
+    //     bodyParams: [text], // adjust according to your template placeholders
+    //   })
+    // );
 
     const [
-      // emailResults,
-      waResults,
+      emailResults,
+      // waResults,
     ] = await Promise.all([
-      // Promise.allSettled(emailSends),
-      Promise.allSettled(waSends),
+      Promise.allSettled(emailSends),
+      // Promise.allSettled(waSends),
     ]);
 
-    // const emailFailed = emailResults.filter(
-    //   (r) => r.status === "rejected"
-    // ).length;
-    const waFailed = waResults.filter((r) => r.status === "rejected").length;
+    const emailFailed = emailResults.filter(
+      (r) => r.status === "rejected"
+    ).length;
+    // const waFailed = waResults.filter((r) => r.status === "rejected").length;
 
     return res.status(200).json({
       message: "Dispatch complete",
       summary: {
-        // email: { attempted: uniqueEmails.length, failed: emailFailed },
-        whatsapp: { attempted: uniquePhones.length, failed: waFailed },
+        email: { attempted: uniqueEmails.length, failed: emailFailed },
+        // whatsapp: { attempted: uniquePhones.length, failed: waFailed },
       },
     });
   } catch (error) {

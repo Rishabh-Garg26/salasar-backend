@@ -29,7 +29,7 @@ const takeScreenshot = async (url, elementId) => {
     console.log("Attempting to find selectors on URL:", page.url());
 
     // 3. Wait for selectors
-    await page.waitForSelector("#report-dashboard-heading", {
+    await page.waitForSelector(`#report-dashboard-heading`, {
       visible: true,
       timeout: 30000,
     });
