@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const reportController = require('../controllers/reportController');
+const reportController = require("../controllers/reportController");
 
-const localhostOnly = require('../middlewares/localhostOnlyMiddleware');
+const localhostOnly = require("../middlewares/localhostOnlyMiddleware");
 
-router.post('/send-report', localhostOnly, reportController.sendReport);
+router.post("/send-report", localhostOnly, reportController.sendReport);
 
 module.exports = router;
