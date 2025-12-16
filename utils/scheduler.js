@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 const axios = require("axios");
+const db = require("../config/db");
 
 // Configuration for request delays and retries
 const CONFIG = {
@@ -10,7 +11,10 @@ const CONFIG = {
   CONCURRENT_REQUESTS: 1, // Sequential processing only
 };
 
+
+
 // Dashboard configuration - easily extensible
+
 const DASHBOARD_CONFIGS = [
   {
     id: "daily-report",
@@ -21,182 +25,223 @@ const DASHBOARD_CONFIGS = [
     text: "Here is your daily report.",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 1,
+    iterateDepartments: false,
   },
   {
     id: "cnc-production",
     name: "CNC Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/CNC/production`,
-    elementId: "CNC-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
     graph: "CNC",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 2,
+    iterateDepartments: true,
   },
   {
     id: "cnc-mis",
     name: "CNC MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/CNC/mis`,
-    elementId: "CNC-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
     graph: "CNC",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 3,
+    iterateDepartments: true,
   },
   {
     id: "HSD-production",
     name: "HSD Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/production`,
-    elementId: "HSD-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
     graph: "HSD",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 4,
+    iterateDepartments: true,
   },
   {
     id: "HSD-mis",
     name: "HSD MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/MIS`,
-    elementId: "HSD-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
     graph: "HSD",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 5,
+    iterateDepartments: true,
   },
   {
     id: "COW-production",
     name: "COW Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/COW/production`,
-    elementId: "COW-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
     graph: "COW",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 6,
+    iterateDepartments: true,
   },
   {
     id: "COW-mis",
     name: "COW MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/COW/mis`,
-    elementId: "COW-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
     graph: "COW",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 7,
+    iterateDepartments: true,
   },
   {
     id: "GI-production",
     name: "GI Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/GI/production`,
-    elementId: "GI-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
     graph: "GI",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 8,
+    iterateDepartments: true,
   },
   {
     id: "GI-mis",
     name: "GI MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/GI/mis`,
-    elementId: "GI-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
     graph: "GI",
     whatsappTemplate: { name: "daily_report", language: "en" },
     priority: 9,
+    iterateDepartments: true,
   },
   {
     id: "MISCLLANEOUS-production",
     name: "MISCLLANEOUS Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Miscellaneous/production`,
-    elementId: "MISCLLANEOUS-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
     graph: "Miscellaneous",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 8,
+    priority: 10,
+    iterateDepartments: true,
   },
   {
     id: "MISCLLANEOUS-mis",
     name: "MISCLLANEOUS MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Miscellaneous/mis`,
-    elementId: "MISCLLANEOUS-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
     graph: "Miscellaneous",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 9,
+    priority: 11,
+    iterateDepartments: true,
   },
   {
     id: "OCTAPOLE-production",
     name: "OCTAPOLE Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Octapole/production`,
-    elementId: "OCTAPOLE-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
-    graph: "OCTAPOLE",
+    graph: "Octapole",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 10,
+    priority: 12,
+    iterateDepartments: true,
   },
   {
     id: "OCTAPOLE-mis",
     name: "OCTAPOLE MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Octapole/mis`,
-    elementId: "OCTAPOLE-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
-    graph: "OCTAPOLE",
+    graph: "Octapole",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 11,
+    priority: 13,
+    iterateDepartments: true,
   },
   {
     id: "SOLAR-production",
     name: "SOLAR Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Solar/production`,
-    elementId: "SOLAR-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
-    graph: "SOLAR",
+    graph: "Solar",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 12,
+    priority: 14,
+    iterateDepartments: true,
   },
   {
     id: "SOLAR-mis",
     name: "SOLAR MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Solar/mis`,
-    elementId: "SOLAR-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
-    graph: "SOLAR",
+    graph: "Solar",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 13,
+    priority: 15,
+    iterateDepartments: true,
   },
   {
     id: "ZETWORK-production",
     name: "ZETWORK Production",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Zetwork/production`,
-    elementId: "ZETWORK-production",
+    elementId: ["production-item-wise", "production-day-wise"],
     subject: "Daily Report",
     text: "Here is your daily production report.",
-    graph: "ZETWORK",
+    graph: "Zetwork",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 14,
+    priority: 16,
+    iterateDepartments: true,
   },
   {
     id: "ZETWORK-mis",
     name: "ZETWORK MIS",
     url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/Zetwork/mis`,
-    elementId: "ZETWORK-mis",
+    elementId: "mis-dept-wise",
     subject: "Daily Report",
     text: "Here is your daily MIS report.",
-    graph: "ZETWORK",
+    graph: "Zetwork",
     whatsappTemplate: { name: "daily_report", language: "en" },
-    priority: 15,
+    priority: 17,
+    iterateDepartments: true,
+  },
+  {
+    id: "RAMBOLL-production",
+    name: "RAMBOLL Production",
+    url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/RAMBOLL/production`,
+    elementId: ["production-item-wise", "production-day-wise"],
+    subject: "Daily Report",
+    text: "Here is your daily production report.",
+    graph: "RAMBOLL",
+    whatsappTemplate: { name: "daily_report", language: "en" },
+    priority: 18,
+    iterateDepartments: true,
+  },
+  {
+    id: "RAMBOLL-mis",
+    name: "RAMBOLL MIS",
+    url: `${process.env.SEND_REPORT_FRONTEND_SERVER}/dashboard/RAMBOLL/mis`,
+    elementId: "mis-dept-wise",
+    subject: "Daily Report",
+    text: "Here is your daily MIS report.",
+    graph: "RAMBOLL",
+    whatsappTemplate: { name: "daily_report", language: "en" },
+    priority: 19,
+    iterateDepartments: true,
   },
 ];
 
@@ -225,6 +270,53 @@ const getDateRange = () => {
   return { startISO, endISO, currentWeek };
 };
 
+// Utility function to fetch departments
+const fetchDepartments = async (type) => {
+  try {
+    // Fetch sheet_id directly from DB
+    const sheetInfo = await db("google_sheet_info")
+      .where({
+        type: type,
+        default_sheet: true
+      })
+      .first();
+
+    if (!sheetInfo || !sheetInfo.sheet_id) {
+       console.warn(`No default sheet found for type: ${type}`);
+       return [];
+    }
+
+    const response = await axios.get(
+      `${process.env.SEND_REPORT_FRONTEND_SERVER}/api/meta/departments?type=${type}&sheet_id=${sheetInfo.sheet_id}`
+    );
+    return response.data?.departments || [];
+  } catch (error) {
+    console.error(`Error fetching departments for ${type}:`, error.message);
+    return [];
+  }
+};
+
+const fetchSupervisors = async (type, dept, startDate, endDate) => {
+  try {
+     const sheetInfo = await db("google_sheet_info")
+      .where({
+        type: type,
+        default_sheet: true
+      })
+      .first();
+
+    if (!sheetInfo || !sheetInfo.sheet_id) return [];
+
+    const response = await axios.get(
+      `${process.env.SEND_REPORT_FRONTEND_SERVER}/api/meta/supervisors?type=${type}&sheet_id=${sheetInfo.sheet_id}&dept=${encodeURIComponent(dept)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+    );
+    return response.data?.supervisors || [];
+  } catch (error) {
+     console.error(`Error fetching supervisors for ${type}/${dept}:`, error.message);
+     return [];
+  }
+};
+
 // Single request handler with retry mechanism
 const sendDashboardRequest = async (dashboardConfig, retryCount = 0) => {
   const { startISO, endISO, currentWeek } = getDateRange();
@@ -243,16 +335,26 @@ const sendDashboardRequest = async (dashboardConfig, retryCount = 0) => {
     requestData.url += `?date=${encodeURIComponent(
       startISO
     )}%2C${encodeURIComponent(endISO)}`;
+     
+    if (dashboardConfig.department) {
+       requestData.url += `&selectedDepts=${encodeURIComponent(dashboardConfig.department)}`;
+    }
   }
 
   // Add week parameters for MIS dashboards
   if (dashboardConfig.id.includes("mis")) {
-    requestData.url += `?selectedWeek=${currentWeek}&selectedDepts=Production+`;
+    const deptParam = dashboardConfig.department ? encodeURIComponent(dashboardConfig.department) : "Production";
+    requestData.url += `?selectedWeek=${currentWeek}&selectedDepts=${deptParam}`;
   }
 
   // Add graph parameter if specified
   if (dashboardConfig.graph) {
     requestData.graph = dashboardConfig.graph;
+  }
+
+  // Add department parameter if specified (for granular filtering)
+  if (dashboardConfig.department) {
+    requestData.department = dashboardConfig.department;
   }
 
   try {
@@ -317,75 +419,116 @@ const processRequestQueue = async () => {
   const results = [];
   const startTime = Date.now();
 
-  console.log(
-    `🚀 Starting batch processing of ${DASHBOARD_CONFIGS.length} dashboards...`
-  );
-  console.log(
-    `⏱️  Estimated completion time: ~${(
-      (DASHBOARD_CONFIGS.length * CONFIG.REQUEST_DELAY_MS) /
-      1000 /
-      60
-    ).toFixed(1)} minutes`
-  );
+  // Define the types we want to process for detailed reports
+  const REPORT_TYPES = [
+      { type: "CNC", misUrl: "/dashboard/CNC/mis", prodUrl: "/dashboard/CNC/production" },
+      { type: "HSD", misUrl: "/dashboard/MIS", prodUrl: "/dashboard/production" }, // HSD maps to base URLs? Checks DASHBOARD_CONFIGS. Yes.
+      { type: "COW", misUrl: "/dashboard/COW/mis", prodUrl: "/dashboard/COW/production" },
+      { type: "GI", misUrl: "/dashboard/GI/mis", prodUrl: "/dashboard/GI/production" },
+      { type: "Miscellaneous", misUrl: "/dashboard/Miscellaneous/mis", prodUrl: "/dashboard/Miscellaneous/production" },
+      { type: "Octapole", misUrl: "/dashboard/Octapole/mis", prodUrl: "/dashboard/Octapole/production" },
+      { type: "Solar", misUrl: "/dashboard/Solar/mis", prodUrl: "/dashboard/Solar/production" },
+      { type: "Zetwork", misUrl: "/dashboard/Zetwork/mis", prodUrl: "/dashboard/Zetwork/production" },
+      { type: "RAMBOLL", misUrl: "/dashboard/RAMBOLL/mis", prodUrl: "/dashboard/RAMBOLL/production" },
+            { type: "BHILAI", misUrl: "/dashboard/BHILAI/mis", prodUrl: "/dashboard/BHILAI/production" },
+  ];
 
-  // Sort dashboards by priority
-  const sortedDashboards = [...DASHBOARD_CONFIGS].sort(
-    (a, b) => a.priority - b.priority
-  );
+  console.log(`🚀 Starting processing of ${REPORT_TYPES.length} report types...`);
+  const { startISO, endISO, currentWeek } = getDateRange();
+  const frontendUrl = process.env.SEND_REPORT_FRONTEND_SERVER;
 
-  for (let i = 0; i < sortedDashboards.length; i++) {
-    const dashboard = sortedDashboards[i];
-    const position = i + 1;
+  for (const group of REPORT_TYPES) {
+      console.log(`\n📂 Processing Group: ${group.type}`);
+      const departments = await fetchDepartments(group.type);
 
-    console.log(
-      `\n📊 Processing dashboard ${position}/${DASHBOARD_CONFIGS.length}: ${dashboard.name}`
-    );
+      if (!departments.length) {
+          console.warn(`   No departments found for ${group.type}, skipping.`);
+          continue;
+      }
 
-    // Process each dashboard request
-    const result = await sendDashboardRequest(dashboard);
-    results.push(result);
+      for (const dept of departments) {
+          console.log(`   ➡ Department: ${dept}`);
+          const supervisors = await fetchSupervisors(group.type, dept, startISO, endISO);
+          
+          // Construct Pages
+          const pages = [];
 
-    // Add delay between requests (except for the last one)
-    if (i < sortedDashboards.length - 1) {
-      console.log(
-        `⏳ Waiting ${
-          CONFIG.REQUEST_DELAY_MS / 1000
-        } seconds before next request...`
-      );
-      await delay(CONFIG.REQUEST_DELAY_MS);
-    }
+          // 1. Production Dashboard (Item Wise - Dept Level)
+          // URL Params: date, selectedDepts
+          const prodBaseUrl = `${frontendUrl}${group.prodUrl}`;
+          const prodUrl = `${prodBaseUrl}?date=${encodeURIComponent(startISO)},${encodeURIComponent(endISO)}&selectedDepts=${encodeURIComponent(dept)}`;
+          
+          pages.push({
+              url: prodUrl,
+              items: [{ id: "production-item-wise", name: `${group.type}_${dept}_Item_Wise.png` }]
+          });
+
+          // 2. MIS Dashboard (Dept Wise - Dept Level)
+          // URL Params: selectedWeek, selectedDepts
+          const misBaseUrl = `${frontendUrl}${group.misUrl}`;
+          // For MIS, deptParam ensures filtering
+          const misUrl = `${misBaseUrl}?selectedWeek=${currentWeek}&selectedDepts=${encodeURIComponent(dept)}`;
+          
+          pages.push({
+              url: misUrl,
+              items: [{ id: "mis-dept-wise", name: `${group.type}_${dept}_MIS.png` }]
+          });
+
+          // 3. Supervisor Day-Wise Graphs
+          for (const sup of supervisors) {
+             // Production Dashboard, filtered by Supervisor
+             // Should we also keep Department filter? Yes, context.
+             const supUrl = `${prodBaseUrl}?date=${encodeURIComponent(startISO)},${encodeURIComponent(endISO)}&selectedDepts=${encodeURIComponent(dept)}&selectedSupervisors=${encodeURIComponent(sup)}`;
+             
+             // Sanitize filename
+             const safeSup = sup.replace(/[^a-z0-9]/gi, '_');
+             pages.push({
+                 url: supUrl,
+                 items: [{ id: "production-day-wise", name: `${group.type}_${dept}_${safeSup}_Day_Wise.png` }]
+             });
+          }
+          
+          // Construct Request payload
+          const requestBody = {
+              subject: `Daily Report - ${group.type} - ${dept}`,
+              text: `Attached is the daily report for ${group.type} Department: ${dept}.\nIncludes Item-wise production, MIS data, and Day-wise production for ${supervisors.length} supervisors.`,
+              graph: group.type, // For recipient filtering
+              department: dept,
+              pages: pages,
+              id: `${group.type}-${dept}-combined` // For logging
+          };
+
+          // Send Request
+           try {
+            console.log(`      Sending report with ${pages.length} pages...`);
+            const response = await axios.post(
+                `${process.env.SEND_REPORT_BACKEND_SERVER}/api/report/send-report`,
+                requestBody,
+                {
+                    timeout: CONFIG.TIMEOUT_MS * Math.max(1, pages.length / 2), // Increase timeout based on pages
+                    headers: { "Content-Type": "application/json" }
+                }
+            );
+            results.push({ success: true, dashboard: requestBody.subject, message: response.data?.message });
+            console.log(`      ✅ Sent.`);
+
+            // Delay between departments
+            await delay(CONFIG.REQUEST_DELAY_MS);
+          } catch (e) {
+              console.error(`      ❌ Failed:`, e.message);
+              results.push({ success: false, dashboard: requestBody.subject, error: e.message });
+          }
+      }
   }
 
-  const totalTime = Date.now() - startTime;
-
-  // Generate summary report
-  const successful = results.filter((r) => r.success).length;
-  const failed = results.filter((r) => !r.success).length;
-
-  console.log("\n" + "=".repeat(60));
-  console.log("📈 BATCH PROCESSING SUMMARY");
-  console.log("=".repeat(60));
-  console.log(`✅ Successful: ${successful}/${results.length}`);
-  console.log(`❌ Failed: ${failed}/${results.length}`);
-  console.log(`⏱️  Total time: ${(totalTime / 1000 / 60).toFixed(1)} minutes`);
-  console.log(
-    `📊 Average time per dashboard: ${(
-      totalTime /
-      results.length /
-      1000
-    ).toFixed(1)} seconds`
-  );
-
-  if (failed > 0) {
-    console.log("\n❌ Failed dashboards:");
-    results
-      .filter((r) => !r.success)
-      .forEach((r) => {
-        console.log(`   - ${r.dashboard}: ${r.error}`);
-      });
+  // Preserve original Daily Report (General) logic if needed?
+  // Use DASHBOARD_CONFIGS[0] ("Daily Report")
+  const dailyReport = DASHBOARD_CONFIGS.find(d => d.id === "daily-report");
+  if (dailyReport) {
+       console.log(`\n📊 Sending General Daily Report...`);
+       const res = await sendDashboardRequest(dailyReport);
+       results.push(res);
   }
-
-  console.log("=".repeat(60));
 
   return results;
 };
@@ -430,7 +573,7 @@ cron.schedule("0 8 * * *", sendDailyReport, {
 });
 
 console.log("📅 Daily Report Scheduler initialized successfully");
-console.log(`🎯 Configured for ${DASHBOARD_CONFIGS.length} dashboards`);
+console.log(`🎯 Configured for ${DASHBOARD_CONFIGS.length} base dashboards`);
 console.log(`⏱️  Request delay: ${CONFIG.REQUEST_DELAY_MS / 1000}s`);
 console.log(`🔄 Max retries: ${CONFIG.MAX_RETRIES}`);
 console.log(`⏰ Schedule: Daily at 8:00 AM IST`);

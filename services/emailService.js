@@ -34,19 +34,34 @@ const sendVforgotPasswordEmail = async (email, token) => {
   await transporter.sendMail(mailOptions);
 };
 
-const sendReportEmail = async (to, subject, text, attachment) => {
+const sendReportEmail = async (to, subject, text, attachmentsData, cc = []) => {
+  // Ensure we work with an array
+  const buffers = Array.isArray(attachmentsData)
+    ? attachmentsData
+    : [attachmentsData];
+
+  const attachments = buffers.map((item, index) => {
+    if (item && item.filename && item.content) {
+        return {
+            filename: item.filename,
+            content: item.content,
+            contentType: "image/png"
+        };
+    }
+    return {
+      filename: `report_${index + 1}.png`,
+      content: item,
+      contentType: "image/png",
+    };
+  });
+
   const mailOptions = {
     from: process.env.EMAIL_USERNAME,
     to,
+    cc, // Add CC
     subject,
     text,
-    attachments: [
-      {
-        filename: "report.png",
-        content: attachment,
-        contentType: "image/png",
-      },
-    ],
+    attachments,
   };
 
   await transporter.sendMail(mailOptions);

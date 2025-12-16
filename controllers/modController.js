@@ -636,7 +636,8 @@ exports.addNotificationusers = async (req, res) => {
       phoneEnabled: req.body.phoneEnabled,
       email: req.body.email,
       phone: req.body.phone,
-      graphs: JSON.stringify(req.body.graphNames),
+      cc: req.body.cc,
+      graphs: JSON.stringify(req.body.graphs),
     });
 
     return res.status(200).send({ message: "user added successfully" });
@@ -659,6 +660,7 @@ exports.updatNotificationeUsers = async (req, res) => {
         phoneEnabled: req.body.phoneEnabled,
         email: req.body.email,
         phone: req.body.phone,
+        cc: req.body.cc,
         graphs: JSON.stringify(req.body.graph),
       })
       .where({ id: req.body.id });
