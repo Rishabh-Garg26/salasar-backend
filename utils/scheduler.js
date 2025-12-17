@@ -430,7 +430,7 @@ const processRequestQueue = async () => {
       { type: "Solar", misUrl: "/dashboard/Solar/mis", prodUrl: "/dashboard/Solar/production" },
       { type: "Zetwork", misUrl: "/dashboard/Zetwork/mis", prodUrl: "/dashboard/Zetwork/production" },
       { type: "RAMBOLL", misUrl: "/dashboard/RAMBOLL/mis", prodUrl: "/dashboard/RAMBOLL/production" },
-            { type: "BHILAI", misUrl: "/dashboard/BHILAI/mis", prodUrl: "/dashboard/BHILAI/production" },
+      { type: "BHILAI", misUrl: "/dashboard/BHILAI/mis", prodUrl: "/dashboard/BHILAI/production" },
   ];
 
   console.log(`🚀 Starting processing of ${REPORT_TYPES.length} report types...`);
@@ -445,10 +445,10 @@ const processRequestQueue = async () => {
           console.warn(`   No departments found for ${group.type}, skipping.`);
           continue;
       }
-
+      const supervisors = await fetchSupervisors(group.type, "", startISO, endISO);
       for (const dept of departments) {
           console.log(`   ➡ Department: ${dept}`);
-          const supervisors = await fetchSupervisors(group.type, dept, startISO, endISO);
+          
           
           // Construct Pages
           const pages = [];
