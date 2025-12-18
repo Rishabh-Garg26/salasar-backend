@@ -114,7 +114,6 @@ router.put(
 router.get(
   "/google_sheet",
   authenticateToken,
-  authorizeRole(["can_read_role"]),
   controller.getGoogleSheet
 );
 

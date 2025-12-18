@@ -127,27 +127,69 @@ const sendReport = async (req, res) => {
     const waSet = new Set(whatsappTargets);
     const uniquePhones = [...waSet];
 
-    // ... WhatsApp logic (commented out in original, keeping it that way)
+
     const waTemplate = {
       name: whatsappTemplate?.name || "report_with_image",
       language: whatsappTemplate?.language || "en",
     };
     // console.log("waTemplate", waTemplate);
 
+    
+
+    const waSends = uniquePhones.map((msisdn) =>
+          sendWhatsappTemplateWithImage({
+            to: msisdn,
+            templateName: waTemplate.name,
+            languageCode: waTemplate.language,
+            headerImageBuffer: imageBuffers[0]?.content,
+            bodyParams: [text], // adjust according to your template placeholders
+          })
+        );
+
+    // --- LOGIC FOR SENDING MULTIPLE IMAGES (One message per image) ---
+    /*
+    const waSendsMultiple = [];
+    uniquePhones.forEach((msisdn) => {
+      // Loop through ALL image buffers
+      imageBuffers.forEach((imgBuffer, idx) => {
+         waSendsMultiple.push(
+            sendWhatsappTemplateWithImage({
+              to: msisdn,
+              templateName: waTemplate.name,
+              languageCode: waTemplate.language,
+              headerImageBuffer: imgBuffer.content,
+              // Optionally add index/name to text if you want to distinguish messages
+              bodyParams: [`${text} (Part ${idx+1}/${imageBuffers.length})`], 
+            })
+         );
+      });
+    });
+    // Then await Promise.all(waSendsMultiple) ...
+    */
+
+
+
     const [
       emailResults,
+      waResults,
     ] = await Promise.all([
       Promise.allSettled(emailPromises),
+      Promise.allSettled(waSends),
     ]);
 
     const emailFailed = emailResults.filter(
       (r) => r.status === "rejected"
     ).length;
 
+    const waFailed = waResults.filter((r) => r.status === "rejected").length;
+
+    console.log(waFailed);
+    
     return res.status(200).json({
       message: "Dispatch complete",
       summary: {
         email: { attempted: emailPromises.length, failed: emailFailed },
+        whatsapp: { attempted: uniquePhones.length, failed: waFailed },
       },
     });
   } catch (error) {

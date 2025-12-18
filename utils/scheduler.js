@@ -270,6 +270,15 @@ const getDateRange = () => {
   return { startISO, endISO, currentWeek };
 };
 
+// Helper to format date as DD-MM-YY
+const formatDateDDMMYY = (isoString) => {
+  const d = new Date(isoString);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}-${mm}-${yy}`;
+};
+
 // Utility function to fetch departments
 const fetchDepartments = async (type) => {
   try {
@@ -488,10 +497,14 @@ const processRequestQueue = async () => {
              });
           }
           
+          // Format dates for subject
+          const startStr = formatDateDDMMYY(startISO);
+          const endStr = formatDateDDMMYY(endISO);
+
           // Construct Request payload
           const requestBody = {
-              subject: `Daily Report - ${group.type} - ${dept}`,
-              text: `Attached is the daily report for ${group.type} Department: ${dept}.\nIncludes Item-wise production, MIS data, and Day-wise production for ${supervisors.length} supervisors.`,
+              subject: `Weekly ${group.type} MIS and Department Performance Report- Week ${currentWeek} from (${startStr}) to (${endStr}).`,
+              text: `Dear Production Head,\n\nPlease find attached the Weekly performance for your department, please check and review,`,
               graph: group.type, // For recipient filtering
               department: dept,
               pages: pages,

@@ -25,7 +25,7 @@ exports.registerUser = async (req, res) => {
       verification_token: verificationToken,
     });
 
-    await senedVerificationEmail(email, verificationToken);
+    await sendVerificationEmail(email, verificationToken);
 
     res
       .status(201)
@@ -253,7 +253,7 @@ exports.resetpassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
     await db("users")
-      .update({ password: hashedPassword, verification_token: null })
+      .update({ password: hashedPassword, verification_token: null, is_verified: true })
       .where("id", user.id);
 
     return res.status(200).send({ message: "Password reset successfully" });

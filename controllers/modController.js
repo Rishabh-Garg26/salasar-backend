@@ -58,8 +58,12 @@ exports.addUser = async (req, res) => {
     if (permissionCheck) {
       return res.status(500).send({ message: "Duplicate email" });
     }
+
+
+
     // console.log(req.body);
     const hashedPassword = await require("bcrypt").hash("!2345Abc", 10);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
     await db("users").insert({
       email: req.body.email,
       role_id: req.body.role_id,
@@ -69,7 +73,12 @@ exports.addUser = async (req, res) => {
       fname: req.body.fname,
       lname: req.body.lname,
       password: hashedPassword,
+      verification_token: verificationToken,
     });
+
+
+
+     await sendVerificationEmail(req.body.email, verificationToken);
 
     return res.status(200).send({ message: "user added successfully" });
   } catch (error) {
