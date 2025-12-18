@@ -23,7 +23,7 @@ const sendVerificationEmail = async (email, token) => {
 };
 
 const sendVforgotPasswordEmail = async (email, token) => {
-  const passwordRestUrl = `${process.env.FRONTEND_URL}/forgotPassword?token=${token}`;
+  const passwordRestUrl = `${process.env.FRONTEND_URL}/verify?token=${token}`;
   const mailOptions = {
     from: process.env.EMAIL_USERNAME,
     to: email,
