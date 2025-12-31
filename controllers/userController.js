@@ -77,7 +77,7 @@ exports.loginUser = async (req, res) => {
     const accessToken = jwt.sign(
       { id: user.id, role: user.role_id },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
+      { expiresIn: process.env.JWT_EXPIRATION || "1d" }
     );
 
     // Generate Refresh Token
@@ -104,6 +104,7 @@ exports.loginUser = async (req, res) => {
     const dashAccess = permissions.includes("desk_permission") ? "true" : false;
 
     const expiresIn = jwt.decode(accessToken).exp;
+    console.log(expiresIn);
     return res.status(200).json({
       accessToken,
       refreshToken,

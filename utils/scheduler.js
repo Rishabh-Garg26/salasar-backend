@@ -251,10 +251,22 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // Utility function to get current date range for reports
 const getDateRange = () => {
   const currentDate = new Date();
-  const startDate = new Date(currentDate);
-  startDate.setDate(currentDate.getDate() - 6);
+  
+  // Calculate date range: Last Monday to Last Sunday
+  // If today is Monday, we want the previous week (Mon-Sun).
+  const day = currentDate.getDay(); // 0 (Sun) to 6 (Sat)
+  const diffToLastSunday = day === 0 ? 7 : day;
+  
+  const endDate = new Date(currentDate);
+  endDate.setDate(currentDate.getDate() - diffToLastSunday);
+  endDate.setHours(23, 59, 59, 999);
+
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - 6);
+  startDate.setHours(0, 0, 0, 0);
+
   const startISO = startDate.toISOString();
-  const endISO = currentDate.toISOString();
+  const endISO = endDate.toISOString();
 
   // Calculate current week
   const getWeekNumber = (date) => {
@@ -264,8 +276,8 @@ const getDateRange = () => {
     const yearStart = new Date(tempDate.getFullYear(), 0, 1);
     return Math.ceil(((tempDate - yearStart) / 86400000 + 1) / 7);
   };
-  const currentWeek =
-    getWeekNumber(currentDate) > 2 ? getWeekNumber(currentDate) - 1 : 1;
+  // Use startDate (Last Monday) to determine the week number
+  const currentWeek = getWeekNumber(startDate);
 
   return { startISO, endISO, currentWeek };
 };
@@ -446,7 +458,14 @@ const processRequestQueue = async () => {
   const { startISO, endISO, currentWeek } = getDateRange();
   const frontendUrl = process.env.SEND_REPORT_FRONTEND_SERVER;
 
-  for (const group of REPORT_TYPES) {
+  const isMonday = new Date().getDay() === 1;
+  if (!isMonday) {
+    console.log("Not Monday. Skipping weekly departmental reports.");
+  }
+
+  const groupsToProcess = isMonday ? REPORT_TYPES : [];
+
+  for (const group of groupsToProcess) {
       console.log(`\n📂 Processing Group: ${group.type}`);
       const departments = await fetchDepartments(group.type);
 
@@ -508,7 +527,8 @@ const processRequestQueue = async () => {
               graph: group.type, // For recipient filtering
               department: dept,
               pages: pages,
-              id: `${group.type}-${dept}-combined` // For logging
+              id: `${group.type}-${dept}-combined`, // For logging
+              whatsappTemplate: { name: "daily_report", language: "en" }
           };
 
           // Send Request
